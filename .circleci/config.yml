@@ -129,7 +129,7 @@ jobs:
           name: Scan frontend
           command: |
             cd frontend
-            npm audit --audit-level=critical
+            npm audit fix --audit-level=critical --force
       - slack/notify:
           branch_pattern: .+
           event: fail

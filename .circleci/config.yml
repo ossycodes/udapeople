@@ -245,6 +245,7 @@ jobs:
           name: Run migrations
           command: |
             cd ./backend
+            npm install
             export DB_MIGRATION_STATUS=$(npm run migrations)
       - run:
           name: Send database migration status to kvdb

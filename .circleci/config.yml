@@ -9,6 +9,9 @@ commands:
         type: string  
     steps:
       - run:
+          name: Echo workflow ID that is going be be destroyed
+          command: echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
+      - run:
           name: Destroy back-end stack
           when: on_fail
           command: |
@@ -49,7 +52,7 @@ jobs:
       - run:
           name: Build front-end
           command: |
-            cd frontend
+            cd ./frontend
             npm install
             npm run build
       - save_cache:
@@ -72,7 +75,7 @@ jobs:
       - run:
           name: Back-end build
           command: |
-             cd backend
+             cd ./backend
              npm install
              npm run build
       - save_cache:
@@ -95,7 +98,8 @@ jobs:
       - run:
           name: Test frontend
           command: |
-            cd frontend
+            cd ./frontend
+            npm install
             npm run test
       - slack/notify:
           branch_pattern: .+
@@ -114,7 +118,7 @@ jobs:
       - run:
           name: Test backend
           command: |
-            cd backend
+            cd ./backend
             npm run test
       - slack/notify:
           branch_pattern: .+
@@ -133,8 +137,8 @@ jobs:
       - run:
           name: Scan frontend
           command: |
-            cd frontend
-            npm i
+            cd ./frontend
+            npm install
             npm audit fix --audit-level=critical --force
       - slack/notify:
           branch_pattern: .+
@@ -153,7 +157,7 @@ jobs:
       - run:
           name: Scan backend
           command: |
-            cd backend
+            cd ./backend
             npm audit fix --audit-level=critical --force
       - slack/notify:
           branch_pattern: .+
@@ -187,13 +191,13 @@ jobs:
               --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
-          name: Add backend ip to ansible inventory
+          name: Send backend IP to kvdb
           command: |
             export BACKEND_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
-              curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+              curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7}  -d "$BACKEND_IP"
       - run:
           name: Add backend IP to ansible inventory
           command: echo $BACKEND_IP >> ./.circleci/ansible/inventory.txt
@@ -235,17 +239,26 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-build]
       - run:
           name: Run migrations
           command: |
-            # Your code here
-            exit 1
+            cd ./backend
+            export DB_MIGRATION_STATUS=$(npm run migrations)
       - run:
-          name: Send migration results to memstash
+          name: Send database migration status to kvdb
           command: |
-            # Your code here
-            exit 1
-     # Here's where you will add some code to rollback on failure      
+            if echo "$DB_MIGRATION_STATUS" | grep "has been executed successfully"
+            then
+              echo "Database migration has been executed successfully"
+              curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}  -d "success"
+            else
+              echo "Database migration has failed, verify DB setup!"
+              curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}  -d "failure"
+            fi
+      - destroy-environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}       
 
   deploy-frontend:
     docker:

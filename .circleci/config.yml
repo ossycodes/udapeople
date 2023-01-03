@@ -193,7 +193,7 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
-            curl -H "Content-Type: text/plain" -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request PUT --data "$BACKEND_IP" https://api.memstash.io/values/backend_ip
+              curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
       - run:
           name: Add backend IP to ansible inventory
           command: echo $BACKEND_IP >> ./.circleci/ansible/inventory.txt

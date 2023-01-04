@@ -1,35 +1,22 @@
----
-- name: "Update apt packages"
-  become: true
+- name: "installing npm"
+  become: yes
   apt:
+    name: npm
     update_cache: yes
-
-- name: "Remove dependencies that are no longer required"
-  become: true
-  apt:
-    autoremove: yes
-
-- name: "Add nodejs apt key"
-  become: true
-  apt_key:
-    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
-    state: present
-
-- name: "Add nodejs 13.x ppa for apt repo"
-  become: true
-  apt_repository:
-    repo: deb https://deb.nodesource.com/node_13.x bionic main
-    update_cache: yes
-        
-- name: "Install npm and nodejs"
-  become: true
-  apt:
-    name: ["npm", "nodejs"]
     state: latest
-    update_cache: yes
 
-- name: "Install pm2"
-  become: true
+- name: Install nvm
+  become: yes
+  npm:
+    name: n
+    global: yes
+
+- name: install nodejs v13.8.0
+  become: yes
+  command: n 13.8.0
+
+- name: "installing pm2"
+  become: yes
   npm:
     name: pm2
     global: yes

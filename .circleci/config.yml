@@ -267,10 +267,16 @@ jobs:
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "./backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "./backend/.env"
       - run:
+          name: Install dependencies
+          command: |
+            sudo apt update
+            sudo apt install -y awscli
+      - run:
           name: Run database migration
           command: |
             cd ./backend
             npm i
+            npm run build
             npm run migrations > ./migrations_log.txt
             cat ./migrations_log.txt
       - run:

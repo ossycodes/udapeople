@@ -46,14 +46,14 @@ commands:
     steps:
       - run:
           name: Revert migrations
+          # Add when this will run
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS=$(curl -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request GET https://api.memstash.io/values/DB_MIGRATION_STATUS_<< parameters.workflowID >>)
-            echo $SUCCESS
-            if(( "$SUCCESS"=="success" )); 
+            SUCCESS=$(curl -k "https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_<< parameters.workflow_id >>")
+            if(( $SUCCESS==1 )); 
             then
-              cd ./backend
+              cd ~/project/backend
               npm install
               npm run migrations:revert
             fi
@@ -310,7 +310,7 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            BACKEND_IP=$((curl curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
+            BACKEND_IP=$(curl curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
       - run:

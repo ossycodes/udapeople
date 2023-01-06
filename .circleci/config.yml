@@ -310,7 +310,7 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            BACKEND_IP=$(curl curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
+            BACKEND_IP=$(curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
       - run:

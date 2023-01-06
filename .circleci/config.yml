@@ -50,7 +50,7 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS=$(curl -k "https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_<< parameters.workflow_id >>")
+            SUCCESS=$(curl -k "https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_<< parameters.workflowID >>")
             if(( $SUCCESS==1 )); 
             then
               cd ~/project/backend

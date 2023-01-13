@@ -18,7 +18,6 @@ commands:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "./backend/.env"
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "./backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "./backend/.env"
-            cat ./backend/.env
   destroy-environment:
     description: Destroy backend and frontend cloudformation stacks given a workflow ID.
     parameters:
@@ -49,14 +48,14 @@ commands:
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
             SUCCESS=$(curl "https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_<< parameters.workflowID >>")
-            if(( $SUCCESS==1 )); 
+            echo $SUCCESS
+            if(( "$SUCCESS"=="success" )); 
             then
-              cd ~/project/backend
+              cd ./backend
               npm install
               npm run migrations:revert
             fi
@@ -140,7 +139,6 @@ jobs:
           name: Test backend
           command: |
             cd ./backend
-            npm i
             npm run test
       - slack/notify:
           branch_pattern: .+
@@ -285,17 +283,17 @@ jobs:
             pwd
             npm run migrations > migrations_log.txt
             cat migrations_log.txt
-      # - run:
-      #     name: Send database migration status to kvdb
-      #     command: |
-      #       if grep "has been executed successfully" ./backend/migrations_log.txt;
-      #       then
-      #         echo "Database migration has been executed successfully"
-      #         curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}  -d "success"
-      #       else
-      #         echo "Database migration has failed, verify DB setup!"
-      #         curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}  -d "failure"
-      #       fi
+      - run:
+          name: Send database migration status to kvdb
+          command: |
+            if grep "has been executed successfully" ./backend/migrations_log.txt;
+            then
+              echo "Database migration has been executed successfully"
+              curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}  -d "success"
+            else
+              echo "Database migration has failed, verify DB setup!"
+              curl https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}  -d "failure"
+            fi
       - destroy-environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}       
 
@@ -406,10 +404,10 @@ jobs:
             else
               return 1
             fi
-      - destroy-environment:
-          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-      - revert-migrations:
-          workflowID: ${CIRCLE_WORKFLOW_ID:0:7} 
+      # - destroy-environment:
+      #     workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      # - revert-migrations:
+      #     workflowID: ${CIRCLE_WORKFLOW_ID:0:7}  
 
   cloudfront-update:
     docker:
@@ -425,10 +423,10 @@ jobs:
           name: Update cloudfront distribution
           command: |
             # your code here
-      # - destroy-environment:
-      #     workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-      # - revert-migrations:
-      #     workflowID: ${CIRCLE_WORKFLOW_ID:0:7}  
+      - destroy-environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}  
 
   cleanup:
     docker:

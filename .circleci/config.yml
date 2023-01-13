@@ -181,6 +181,7 @@ jobs:
             cd ./backend
             npm audit fix --audit-level=critical --force
             npm audit fix --force
+            npm update path-parse --depth 3
       - slack/notify:
           branch_pattern: .+
           event: fail

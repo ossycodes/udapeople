@@ -139,6 +139,7 @@ jobs:
           name: Test backend
           command: |
             cd ./backend
+            npm i
             npm run test
       - slack/notify:
           branch_pattern: .+

@@ -102,7 +102,7 @@ export class ConfigService {
       port: this.envConfig.TYPEORM_PORT,
       username: this.envConfig.TYPEORM_USERNAME,
       password: this.envConfig.TYPEORM_PASSWORD,
-      database: 'udapeopledbbprod',
+      database: this.envConfig.TYPEORM_DATABASE,
       entities: [this.envConfig.TYPEORM_ENTITIES],
       // entities: [Product, Order, Employee],
       logging: this.envConfig.TYPEORM_LOGGING === 'true',

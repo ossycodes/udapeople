@@ -290,8 +290,9 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - aws-cli/setup
       - restore_cache:
-          keys: [backend-build]
+          keys: [scan-backend]  
       - attach_workspace:
           at: ~/
       - create-dotenv-file
@@ -301,7 +302,7 @@ jobs:
             cd ./backend
             pwd
             npm run migrations > migrations_dump.txt
-            cat migrations_log.txt
+            cat migrations_dump.txt
       - run:
           name: Send database migration status to kvdb
           command: |

@@ -295,14 +295,12 @@ jobs:
           keys: [scan-backend]  
       - attach_workspace:
           at: ~/
-      - create-dotenv-file
       - run:
           name: Run database migration
           command: |
             cd ./backend
             pwd
             npm run migrations > migrations_dump.txt
-            cat migrations_dump.txt
       - run:
           name: Send database migration status to kvdb
           command: |
@@ -313,8 +311,7 @@ jobs:
                 # If you are using kvdb.io, generate the bucket ID "9GE4jRtKznmVKRfvdBABBe" in your local terminal first
                 curl -k https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
-      - destroy-environment:
-          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}       
+      - revert-migrations:    
 
   deploy-frontend:
     docker:
@@ -424,7 +421,7 @@ jobs:
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-west-2.amazonaws.com"
             if curl -s ${URL} | grep "Welcome"
             then
-              return 0
+              return 1
             else
               return 1
             fi

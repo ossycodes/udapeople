@@ -233,28 +233,40 @@ jobs:
             echo ${BACKEND_IP} >> ./.circleci/ansible/inventory.txt
             cat ./.circleci/ansible/inventory.txt
       - persist_to_workspace:
-          root: .
+          root: ~/
           paths:
-            - ./.circleci/ansible/inventory.txt
+            - project/.circleci/ansible/inventory.txt
+      - slack/notify:
+          branch_pattern: .+
+          event: fail
+          channel: $SLACK_DEFAULT_CHANNEL
+          template: basic_fail_1
+      # Here's where you will add some code to rollback on failure
       - destroy-environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}    
 
   configure-infrastructure:
     docker:
       # Docker image that supports Ansible
-      - image: python:3.7-alpine3.11
+      - image: amazon/aws-cli
     steps:
       - checkout
       - attach_workspace:
-          at: .
+          at: ~/
       - add_ssh_keys:
           fingerprints: 
             - "be:c7:1d:8a:79:37:c9:8c:0e:e8:52:f0:98:9c:07:b2"
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible
-            pip install awscli
+            # Your code here
+            yum install -y gcc libffi-devel python3 epel-release && \
+            yum install -y python3-pip && \
+            yum install -y wget && \
+            yum clean all && \
+            yum update -y && \
+            yum install -y tar gzip curl unzip openssh-server openssh-clients && \
+            python3 -m pip install ansible
       - create-dotenv-file
       - run:
           name: Configure server
@@ -262,7 +274,8 @@ jobs:
             pwd
             cat ./.circleci/ansible/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
-            ansible-playbook -i ./.circleci/ansible/inventory.txt ./.circleci/ansible/configure-server.yml
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
       - destroy-environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}        
 
@@ -275,7 +288,7 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       - attach_workspace:
-          at: .
+          at: ~/
       - create-dotenv-file
       - run:
           name: Run database migration
@@ -311,7 +324,7 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_10.x | bash -
             yum install -y nodejs
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Get backend url
           command: |
@@ -344,7 +357,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: .
+          at: ~/
       - add_ssh_keys:
           fingerprints: 
             - "e2:c9:22:04:6c:5c:91:d9:6b:fa:69:21:5b:be:a7:ad"
@@ -378,7 +391,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Install dependencies
           command: |
@@ -469,15 +482,15 @@ workflows:
               only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
-      - deploy-frontend:
-          requires: [run-migrations]
-      - deploy-backend:
-          requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
+      # - deploy-frontend:
+      #     requires: [run-migrations]
+      # - deploy-backend:
+      #     requires: [run-migrations]
+      # - smoke-test:
+      #     requires: [deploy-backend, deploy-frontend]
+      # - cloudfront-update:
+      #     requires: [smoke-test]
+      # - cleanup:
+      #     requires: [cloudfront-update]

@@ -182,6 +182,9 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit fix --force
             npm update path-parse --depth 3
+      - save_cache:
+          paths: [backend/node_modules]
+          key: scan-backend
       - slack/notify:
           branch_pattern: .+
           event: fail
@@ -251,11 +254,6 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/
-      - add_ssh_keys:
-          fingerprints: 
-            - "be:c7:1d:8a:79:37:c9:8c:0e:e8:52:f0:98:9c:07:b2"
       - run:
           name: Install dependencies
           command: |
@@ -267,6 +265,11 @@ jobs:
             yum update -y && \
             yum install -y tar gzip curl unzip openssh-server openssh-clients && \
             python3 -m pip install ansible
+      - attach_workspace:
+          at: ~/
+      - add_ssh_keys:
+          fingerprints: 
+            - "be:c7:1d:8a:79:37:c9:8c:0e:e8:52:f0:98:9c:07:b2"
       - create-dotenv-file
       - run:
           name: Configure server

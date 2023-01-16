@@ -318,15 +318,13 @@ jobs:
   deploy-frontend:
     docker:
       # Docker image that supports AWS CLI
-      - image: circleci/node:13.8.0
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - aws-cli/setup
       - run:
           name: Install dependencies
           command: |
-            sudo apt update && \
-            sudo apt install -y tar gzip curl
+            yum install -y tar gzip
       - attach_workspace:
           at: ~/
       - run:
@@ -358,7 +356,7 @@ jobs:
   deploy-backend:
     docker:
       # Docker image that supports Ansible
-      - image: python:3.7-alpine3.11
+      - image: python:3.9.16
     steps:
       - checkout
       - aws-cli/setup
@@ -368,7 +366,11 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update --no-cache tar gzip nodejs npm aws-cli ansible
+            apt-get update -y
+            apt install ansible -y
+            apt install awscli -y
+            apt install nodejs -y
+            apt install npm -y
       - restore_cache:
           keys: [backend-build]
       - attach_workspace:

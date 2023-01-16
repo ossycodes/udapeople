@@ -282,27 +282,27 @@ jobs:
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
       - destroy-environment:
-          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}        
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}     
 
   run-migrations:
     docker:
-      # Docker image that supports NodeJS
+      # Docker image here that supports NodeJS
       - image: circleci/node:13.8.0
     steps:
+      # Checkout code from git
       - checkout
       - aws-cli/setup
       - restore_cache:
-          keys: [scan-backend]  
-      - attach_workspace:
-          at: ~/
+          keys: [scan-backend]      
       - run:
-          name: Run database migration
+          name: Run migrations
           command: |
-            cd ./backend
-            pwd
+            cd backend
+            # Run and save the migration output
+            npm install --no-audit --no-fund
             npm run migrations > migrations_dump.txt
       - run:
-          name: Send database migration status to kvdb
+          name: Send migration results to kvdb
           command: |
             # Your code here
             ls ~/
@@ -311,7 +311,9 @@ jobs:
                 # If you are using kvdb.io, generate the bucket ID "9GE4jRtKznmVKRfvdBABBe" in your local terminal first
                 curl -k https://kvdb.io/59iuUJ56cv62L7Ex8VqQXT/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
-      - revert-migrations:    
+      # Here's where you will add some code to rollback on failure
+      - revert-migrations
+      # - destroy-environment  
 
   deploy-frontend:
     docker:

@@ -11,4 +11,4 @@ URL_04
 http://35.153.17.125:3030/api/status
 
 URL_05
-http://ec2-3-93-153-130.compute-1.amazonaws.com:9090/targets
+http://ec2-35-168-7-84.compute-1.amazonaws.com:9090/targets
